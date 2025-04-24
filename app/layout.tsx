@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: 'Geo-Facial checkify',
+  description: 'Attendance with facial and geo-location',
+  generator: 'Geo-Facial checkify',
 }
 
 export default function RootLayout({
