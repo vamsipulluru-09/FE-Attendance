@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { UserRound, Lock, UserPlus, Check, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useVerifyAdmin } from "@/hooks/useRegistration"
 
-export default function RegistrationPage() {
+// Create a component that uses useSearchParams
+function RegistrationForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [token, setToken] = useState("")
@@ -195,5 +196,14 @@ export default function RegistrationPage() {
         </form>
       </Card>
     </div>
+  )
+}
+
+// Main component with Suspense boundary
+export default function RegistrationPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <RegistrationForm />
+    </Suspense>
   )
 }
