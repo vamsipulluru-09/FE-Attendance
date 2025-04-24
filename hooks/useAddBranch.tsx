@@ -63,8 +63,8 @@ export function useAddBranch(onBranchAdded?: OnBranchAddedCallback) {
         formData.append("latitude", parseFloat(branchData.latitude).toString())
         formData.append("longitude", parseFloat(branchData.longitude).toString())
 
-      const apiUrl = `http://localhost:8000/branch/add`
-      const response = await fetch(apiUrl, {
+      const apiUrl = process.env.NEXT_PUBLIC_BACKEND
+      const response = await fetch(`${apiUrl}/branch/add`, {
         method: "POST",
         body: formData,
       })

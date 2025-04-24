@@ -32,10 +32,8 @@ export const useAdminLogin = () => {
       formData.append("username", credentials.username);
       formData.append("password", credentials.password);
 
-      const apiUrl = `http://localhost:8000/admin-login`
-      console.log("API URL:", apiUrl);
-
-      const response = await fetch(apiUrl, {
+      const apiUrl = process.env.NEXT_PUBLIC_BACKEND
+      const response = await fetch(`${apiUrl}/admin-login`, {
         method: "POST",
         body: formData,
       });

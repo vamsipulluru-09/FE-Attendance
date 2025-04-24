@@ -43,7 +43,8 @@ export function useAttendanceApi() {
       formData.append('longitude', coordinates.longitude.toString());
 
       // Make API request
-      const endpoint = `http://localhost:8000/process-${action}`;
+      const apiUrl = process.env.NEXT_PUBLIC_BACKEND
+      const endpoint = `${apiUrl}/process-${action}`;
       const apiResponse = await fetch(endpoint, {
         method: 'POST',
         body: formData,

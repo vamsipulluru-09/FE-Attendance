@@ -37,7 +37,8 @@ export function useEnrollEmployee() {
       }
 
       // Send data to the API endpoint
-      const response = await fetch('http://localhost:8000/enroll-employee', {
+      const apiUrl = process.env.NEXT_PUBLIC_BACKEND
+      const response = await fetch(`${apiUrl}/enroll-employee`, {
         method: 'POST',
         body: formData
       })

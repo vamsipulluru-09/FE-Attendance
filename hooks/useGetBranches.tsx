@@ -10,7 +10,8 @@ export function useBranches() {
   const fetchBranches = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch("http://localhost:8000/branches")
+      const apiUrl = process.env.NEXT_PUBLIC_BACKEND
+      const response = await fetch(`${apiUrl}/branches`)
       const data = await response.json()
 
       if (data.status === "success") {

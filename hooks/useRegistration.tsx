@@ -25,9 +25,11 @@ export const useVerifyAdmin = () => {
       formData.append('token', params.token)
       formData.append('username', params.username)
       formData.append('password', params.password)
+
+      const apiUrl = process.env.NEXT_PUBLIC_BACKEND
       
       // Make the API request
-      const response = await fetch('http://localhost:8000/verify-admin-token', {
+      const response = await fetch(`${apiUrl}/verify-admin-token`, {
         method: 'POST',
         body: formData,
       })

@@ -19,7 +19,8 @@ export function useEmployees() {
   const fetchEmployees = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch("http://localhost:8000/employees")
+      const apiUrl = process.env.NEXT_PUBLIC_BACKEND
+      const response = await fetch(`${apiUrl}/employees`)
       const data = await response.json()
 
       if (data.status === "success") {
