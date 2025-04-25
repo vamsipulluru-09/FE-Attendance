@@ -1,17 +1,27 @@
 "use client"
 
-import React from "react"
+import React, { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import AdminSidebar from "@/components/admin/admin-sidebar"
 import { useAdminLogin } from "@/hooks/useAdminLogin"
 import { Button } from "@/components/ui/button"
 import { LogOut } from "lucide-react"
+import Cookies from 'js-cookie'
 
 export default function AdminLayoutClient({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const router = useRouter()
   const { logoutAdmin } = useAdminLogin()
+
+  useEffect(() => {
+    const adminUsername = Cookies.get('admin_username')
+    if (!adminUsername) {
+      router.push('/role-select')
+    }
+  }, [router])
 
   return (
     <div className="flex h-screen">
