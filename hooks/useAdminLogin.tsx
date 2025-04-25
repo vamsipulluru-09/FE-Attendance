@@ -1,3 +1,5 @@
+"use client"
+
 // useAdminLogin.ts
 import { useState } from "react";
 import { useRouter } from "next/navigation";
