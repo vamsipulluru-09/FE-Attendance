@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from 'js-cookie'
 
 interface LoginCredentials {
   username: string;
@@ -24,7 +23,6 @@ export function useAdminLogin() {
     setLoginError(null);
 
     try {
-      // Create FormData object
       const formData = new FormData();
       formData.append('username', credentials.username);
       formData.append('password', credentials.password);
@@ -32,15 +30,12 @@ export function useAdminLogin() {
 
       const response = await fetch(`${apiurl}/admin-login`, {
         method: "POST",
-        // Remove the Content-Type header to let the browser set it automatically with the boundary
         body: formData,
       });
 
       const data: LoginResponse = await response.json();
 
       if (data.status === "success") {
-        // Since the backend doesn't return a token, we'll use the username as a session identifier
-        Cookies.set('admin_username', credentials.username, { expires: 7 });
         router.push('/admin/dashboard');
         return true;
       } else {
@@ -56,7 +51,6 @@ export function useAdminLogin() {
   };
 
   const logoutAdmin = () => {
-    Cookies.remove('admin_username');
     router.push('/role-select');
   };
 
