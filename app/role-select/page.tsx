@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { UserRound, Users, Mail, Lock } from "lucide-react"
+import { UserRound, Users, Mail, Lock, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,14 +10,18 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useAdminLogin } from "@/hooks/useAdminLogin"
+import { useAdminCredentialsRequest } from "@/hooks/useAdminCredentialsRequest"
 
 export default function RoleSelectPage() {
   const router = useRouter()
   const [selectedRole, setSelectedRole] = useState<string | null>(null)
   const [showLoginDialog, setShowLoginDialog] = useState(false)
+  const [showRequestDialog, setShowRequestDialog] = useState(false)
   const [loginData, setLoginData] = useState({ username: "", password: "" })
+  const [requestData, setRequestData] = useState({ email: "" })
   
   const { loginAdmin, isLoggingIn, loginError } = useAdminLogin()
+  const { requestAdminCredentials, isSubmitting, response } = useAdminCredentialsRequest()
 
   const handleRoleSelect = (role: string) => {
     setSelectedRole(role)
@@ -50,6 +54,27 @@ export default function RoleSelectPage() {
     
     if (success) {
       router.push("/admin/dashboard")
+    }
+  }
+
+  const handleRequestInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setRequestData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleRequestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    const success = await requestAdminCredentials(requestData.email)
+    
+    if (success) {
+      // Clear the form
+      setRequestData({ email: "" })
+      
+      // Close the dialog after 3 seconds
+      setTimeout(() => {
+        setShowRequestDialog(false)
+      }, 3000)
     }
   }
 
@@ -150,6 +175,70 @@ export default function RoleSelectPage() {
               </Button>
               <Button type="submit" disabled={isLoggingIn}>
                 {isLoggingIn ? "Logging in..." : "Login"}
+              </Button>
+            </div>
+          </form>
+
+          <div className="mt-4 pt-4 border-t">
+            <Button
+              type="button"
+              variant="link"
+              className="w-full"
+              onClick={() => {
+                setShowLoginDialog(false)
+                setShowRequestDialog(true)
+              }}
+            >
+              Request Admin Access
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Request Admin Access</DialogTitle>
+            <DialogDescription>
+              Enter your email to request admin access. A super admin will review your request.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleRequestSubmit} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="your.email@example.com"
+                  className="pl-10"
+                  value={requestData.email}
+                  onChange={handleRequestInputChange}
+                  required
+                />
+              </div>
+            </div>
+
+            {response && (
+              <Alert variant={response.status === "error" ? "destructive" : "default"} className="py-2">
+                <AlertDescription>{response.message}</AlertDescription>
+              </Alert>
+            )}
+            
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowRequestDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting || response?.status === "success"}>
+                <Send className="h-4 w-4 mr-2" />
+                {isSubmitting ? "Sending..." : "Send Request"}
               </Button>
             </div>
           </form>

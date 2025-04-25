@@ -1,6 +1,7 @@
 // useAdminLogin.ts
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Cookies from 'js-cookie'
 
 interface LoginCredentials {
   username: string;  // Changed from email to username to match backend
@@ -10,12 +11,13 @@ interface LoginCredentials {
 interface LoginResponse {
   status: "success" | "error";
   message: string;
+  token: string;
 }
 
 /**
  * Hook for handling admin login functionality
  */
-export const useAdminLogin = () => {
+export function useAdminLogin() {
   const router = useRouter();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -28,38 +30,42 @@ export const useAdminLogin = () => {
     setLoginError(null);
 
     try {
-      const formData = new FormData();
-      formData.append("username", credentials.username);
-      formData.append("password", credentials.password);
-
-      const apiUrl = process.env.NEXT_PUBLIC_BACKEND
-      const response = await fetch(`${apiUrl}/admin-login`, {
+      const response = await fetch("/api/admin/login", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
       });
 
       const data: LoginResponse = await response.json();
 
-      if (data.status === "success") {
-        // Set authentication in localStorage
-        localStorage.setItem("adminAuthenticated", "true");
+      if (response.ok) {
+        // Store the token in cookies
+        Cookies.set('admin_token', data.token, { expires: 7 }); // Expires in 7 days
         return true;
       } else {
-        setLoginError(data.message || "Invalid username or password");
+        setLoginError(data.message || "Login failed");
         return false;
       }
     } catch (error) {
-      setLoginError("Login failed. Please try again.");
+      setLoginError("An error occurred during login");
       return false;
     } finally {
       setIsLoggingIn(false);
     }
   };
 
+  const logoutAdmin = () => {
+    // Remove the token from cookies
+    Cookies.remove('admin_token');
+    router.push('/role-select');
+  };
+
   return {
     loginAdmin,
+    logoutAdmin,
     isLoggingIn,
     loginError,
-    clearLoginError: () => setLoginError(null),
   };
-};
+}
