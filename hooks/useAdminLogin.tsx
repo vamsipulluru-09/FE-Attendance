@@ -41,6 +41,7 @@ export function useAdminLogin() {
       if (data.status === "success") {
         // Since the backend doesn't return a token, we'll use the username as a session identifier
         Cookies.set('admin_username', credentials.username, { expires: 7 });
+        router.push('/admin/dashboard');
         return true;
       } else {
         setLoginError(data.message || "Login failed");
