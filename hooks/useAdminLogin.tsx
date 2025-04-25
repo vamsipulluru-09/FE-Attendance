@@ -28,8 +28,9 @@ export function useAdminLogin() {
       const formData = new FormData();
       formData.append('username', credentials.username);
       formData.append('password', credentials.password);
+      const apiurl = process.env.NEXT_PUBLIC_BACKEND
 
-      const response = await fetch("/admin-login", {
+      const response = await fetch(`${apiurl}/admin-login`, {
         method: "POST",
         // Remove the Content-Type header to let the browser set it automatically with the boundary
         body: formData,
