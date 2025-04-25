@@ -32,7 +32,7 @@ export function useAdminLogin() {
     setLoginError(null);
 
     try {
-      const response = await fetch("/admin/login", {
+      const response = await fetch("/admin-login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
