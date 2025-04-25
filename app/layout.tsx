@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { AppInstallPromotion } from './components/AppInstallPromotion'
 
 export const metadata: Metadata = {
   title: 'Geo-Facial checkify',
@@ -14,7 +15,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <AppInstallPromotion />
+      </body>
     </html>
   )
 }

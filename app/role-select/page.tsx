@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { UserRound, Users, Mail, Lock, Send } from "lucide-react"
+import { UserRound, Users, Mail, Lock, Send, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -78,6 +78,10 @@ export default function RoleSelectPage() {
     }
   }
 
+  const handleDownloadApp = () => {
+    window.open('/app-release.apk', '_blank')
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-md">
@@ -114,6 +118,15 @@ export default function RoleSelectPage() {
           </Button>
         </CardFooter>
       </Card>
+
+      {/* Download App Button */}
+      <Button
+        className="fixed bottom-4 right-4 rounded-full h-14 w-14 shadow-lg flex items-center justify-center"
+        onClick={handleDownloadApp}
+        title="Download App"
+      >
+        <Download className="h-6 w-6" />
+      </Button>
 
       <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
         <DialogContent className="sm:max-w-md">
