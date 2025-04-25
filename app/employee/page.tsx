@@ -8,33 +8,19 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useRouter } from "next/navigation"
 import { useAttendanceApi } from "@/hooks/useAttendance"
-
-type Coordinates = {
-  latitude: number
-  longitude: number
-  accuracy: number
-}
+import { useLocation } from "@/hooks/useLocation"
 
 export default function AttendancePage() {
   const router = useRouter()
-  const [coordinates, setCoordinates] = useState<Coordinates | null>(null)
-  const [locationError, setLocationError] = useState<string | null>(null)
   const [photo, setPhoto] = useState<string | null>(null)
   const [showCamera, setShowCamera] = useState(false)
+  const { latitude, longitude, accuracy, address, error: locationError, isLoading: isLocationLoading, refreshLocation } = useLocation()
 
   const { checkIn, checkOut, isSubmitting, response } = useAttendanceApi()
 
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
-
-  useEffect(() => {
-    requestGeolocation()
-
-    return () => {
-      stopCamera()
-    }
-  }, [])
 
   useEffect(() => {
     if (showCamera) {
@@ -47,43 +33,6 @@ export default function AttendancePage() {
       stopCamera()
     }
   }, [showCamera])
-
-  const requestGeolocation = () => {
-    if (!navigator.geolocation) {
-      setLocationError("Geolocation is not supported by your browser")
-      return
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setCoordinates({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-        })
-        setLocationError(null)
-      },
-      (error) => {
-        let errorMessage = "Unknown error occurred while retrieving location"
-
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = "Location permission denied. Please enable location services."
-            break
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = "Location information is unavailable."
-            break
-          case error.TIMEOUT:
-            errorMessage = "Location request timed out."
-            break
-        }
-
-        setLocationError(errorMessage)
-        setCoordinates(null)
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-    )
-  }
 
   const startCamera = async () => {
     try {
@@ -101,7 +50,6 @@ export default function AttendancePage() {
       }
     } catch (err) {
       console.error("Error accessing camera:", err)
-      setLocationError("Could not access camera. Please ensure you've granted permission.")
     }
   }
 
@@ -132,14 +80,18 @@ export default function AttendancePage() {
   }
 
   const handleSubmit = async (action: 'checkin' | 'checkout') => {
-    if (!coordinates) {
-      setLocationError("Location data is required. Please enable location services.")
+    if (!latitude || !longitude) {
       return
     }
 
     if (!photo) {
-      setLocationError("Please capture a photo before checking in/out.")
       return
+    }
+
+    const coordinates = {
+      latitude,
+      longitude,
+      accuracy: accuracy || 0
     }
 
     if (action === 'checkin') {
@@ -178,30 +130,42 @@ export default function AttendancePage() {
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription className="ml-2">{locationError}</AlertDescription>
-                  <Button variant="outline" size="sm" className="ml-auto" onClick={requestGeolocation}>
+                  <Button variant="outline" size="sm" className="ml-auto" onClick={refreshLocation}>
                     <RefreshCw className="h-4 w-4 mr-1" />
                     Retry
                   </Button>
                 </Alert>
-              ) : coordinates ? (
-                <div className="bg-muted p-3 rounded-md">
-                  <div className="flex items-center text-sm">
-                    <MapPin className="h-4 w-4 mr-2 text-green-500" />
-                    <span className="font-medium">Location captured</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Lat: {coordinates.latitude.toFixed(6)}, Lng: {coordinates.longitude.toFixed(6)}
-                    {coordinates.accuracy && ` (±${Math.round(coordinates.accuracy)}m)`}
-                  </div>
-                </div>
-              ) : (
+              ) : isLocationLoading ? (
                 <div className="flex items-center">
                   <div className="animate-spin mr-2">
                     <RefreshCw className="h-4 w-4" />
                   </div>
-                  <span className="text-sm">Requesting location...</span>
+                  <span className="text-sm">Detecting location...</span>
                 </div>
-              )}
+              ) : latitude && longitude ? (
+                <div className="bg-muted p-3 rounded-md">
+                  <div className="flex items-center text-sm">
+                    <MapPin className="h-4 w-4 mr-2 text-green-500" />
+                    <span className="font-medium">Location detected</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {address}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Lat: {latitude.toFixed(6)}, Lng: {longitude.toFixed(6)}
+                    {accuracy && ` (±${Math.round(accuracy)}m)`}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-2 w-full"
+                    onClick={refreshLocation}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1" />
+                    Refresh Location
+                  </Button>
+                </div>
+              ) : null}
             </div>
 
             <div className="space-y-3">
@@ -243,18 +207,16 @@ export default function AttendancePage() {
                 size="lg"
                 className="h-16 text-lg"
                 onClick={() => handleSubmit('checkin')}
-                disabled={isSubmitting || !coordinates || !photo}
+                disabled={isSubmitting || !latitude || !longitude || !photo}
               >
                 <CheckCircle className="h-5 w-5 mr-2" />
                 Check-In
               </Button>
-
               <Button
                 size="lg"
-                variant="secondary"
                 className="h-16 text-lg"
                 onClick={() => handleSubmit('checkout')}
-                disabled={isSubmitting || !coordinates || !photo}
+                disabled={isSubmitting || !latitude || !longitude || !photo}
               >
                 <XCircle className="h-5 w-5 mr-2" />
                 Check-Out
@@ -281,36 +243,24 @@ export default function AttendancePage() {
           <DialogHeader>
             <DialogTitle>Capture Photo</DialogTitle>
             <DialogDescription>
-              Position your face within the frame and take a photo.
+              Position your face in the frame and click capture when ready.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col items-center justify-center space-y-4">
-            <div className="relative w-full overflow-hidden rounded-md bg-black">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="h-auto w-full"
-              ></video>
-              <canvas ref={canvasRef} className="hidden"></canvas>
-            </div>
-            <div className="flex justify-center space-x-2">
-              <Button
-                type="button"
-                onClick={capturePhoto}
-                className="bg-blue-500 hover:bg-blue-600"
-              >
-                <Camera className="mr-2 h-4 w-4" />
-                Take Photo
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowCamera(false)}
-              >
-                Cancel
-              </Button>
-            </div>
+          <div className="relative">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className="w-full rounded-lg"
+            />
+            <canvas ref={canvasRef} className="hidden" />
+            <Button
+              className="absolute bottom-4 left-1/2 transform -translate-x-1/2"
+              onClick={capturePhoto}
+            >
+              <Camera className="h-4 w-4 mr-2" />
+              Capture
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
