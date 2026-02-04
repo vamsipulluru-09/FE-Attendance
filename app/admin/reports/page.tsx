@@ -173,21 +173,35 @@ export default function ReportsPage() {
                 <TableBody>
                   {filteredRecords.length > 0 ? (
                     filteredRecords.map((record) => {
-                      // Calculate duration
-                      const checkIn = new Date(`${record.date}T${record.checkIn}`)
-                      const checkOut = new Date(`${record.date}T${record.checkOut}`)
-                      const durationMs = checkOut.getTime() - checkIn.getTime()
-                      const hours = Math.floor(durationMs / (1000 * 60 * 60))
-                      const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60))
-                      const duration = `${hours}h ${minutes}m`
+                      // Ensure checkIn/checkOut are strings for rendering
+                      const checkIn =
+                        typeof record.checkIn === "object" && record.checkIn !== null
+                          ? Object.values(record.checkIn).join(", ")
+                          : String(record.checkIn || "-")
+                      const checkOut =
+                        typeof record.checkOut === "object" && record.checkOut !== null
+                          ? Object.values(record.checkOut).join(", ")
+                          : String(record.checkOut || "-")
+                      // Only calculate duration if checkIn/checkOut are valid strings
+                      let duration = "-"
+                      if (checkIn !== "-" && checkOut !== "-") {
+                        const checkInDate = new Date(`${record.date}T${checkIn}`)
+                        const checkOutDate = new Date(`${record.date}T${checkOut}`)
+                        if (!isNaN(checkInDate.getTime()) && !isNaN(checkOutDate.getTime())) {
+                          const durationMs = checkOutDate.getTime() - checkInDate.getTime()
+                          const hours = Math.floor(durationMs / (1000 * 60 * 60))
+                          const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60))
+                          duration = `${hours}h ${minutes}m`
+                        }
+                      }
 
                       return (
                         <TableRow key={record.id}>
                           <TableCell className="font-medium">{record.employeeId}</TableCell>
                           <TableCell>{record.name}</TableCell>
                           <TableCell>{record.branch}</TableCell>
-                          <TableCell>{record.checkIn}</TableCell>
-                          <TableCell>{record.checkOut}</TableCell>
+                          <TableCell>{checkIn}</TableCell>
+                          <TableCell>{checkOut}</TableCell>
                           <TableCell>{duration}</TableCell>
                         </TableRow>
                       )
